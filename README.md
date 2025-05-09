@@ -152,7 +152,6 @@
 
 **Text-Based**  
 - [Grad-CAM for Explaining Computer Vision Models](https://adataodyssey.com/grad-cam/)
-- [Implementing Grad-CAM in PyTorch](https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82)
 - [Grad-CAM In PyTorch](https://medium.com/@codetrade/grad-cam-in-pytorch-a-powerful-tool-for-visualize-explanations-from-deep-networks-bdc7caf0b282)
 - [Grad-CAM: Visual Explanations from Deep Networks](https://glassboxmedicine.com/2020/05/29/grad-cam-visual-explanations-from-deep-networks/)
 
