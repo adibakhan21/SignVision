@@ -159,6 +159,5 @@
 
 ## WEEK 7–8: Project
 
-Project details will be updated soon. This will involve building an ASL Hand Gesture Recognition system using CNNs and Grad-CAM.
-
+Project details will be updated soon.
 ---
