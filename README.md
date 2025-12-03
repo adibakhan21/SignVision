@@ -159,6 +159,7 @@
 
 ## WEEK 7–8: Project
 
-Project details will be updated soon. This will involve building an ASL Hand Gesture Recognition system using CNNs and Grad-CAM.
-
 ---
+
+## Acknowledgements
+Parts of this project were adapted from [WINTER-PROJECT-ACTIVE-LEARNING](https://github.com/Bhavishya-Gupta/WINTER-PROJECT-ACTIVE-LEARNING) by Bhavishya Gupta.
