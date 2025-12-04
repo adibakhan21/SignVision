@@ -30,12 +30,6 @@ Based on the screenshot of your repository structure, here is exactly how to add
 ![Grad-CAM Visualization](Project/Images/Screenshot%202025-12-04%20at%2018.55.11.png)
 
 
-**For the Repo Structure (The screenshot you just sent):**
-
-
-![Repo Structure](Project/Images/Screenshot%202025-12-04%20at%2019.06.13.png)
-
-
 ### Classification Report
 
 Detailed precision, recall, and F1-scores for all classes:
