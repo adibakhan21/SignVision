@@ -12,22 +12,8 @@ Accuracy: 97.93%
 ### Confusion Matrix
 
 The confusion matrix below visualizes the performance of the classification algorithm. As seen in the diagonal density, the model predicts the vast majority of classes correctly.
-Based on the screenshot of your repository structure, here is exactly how to add those images to your `README.md`.
-
 
 ![Confusion Matrix](Project/Images/Screenshot%202025-12-04%20at%2018.56.42.png)
-
-
-**For the Activation Maps:**
-
-
-![Activation Maps](Project/Images/Screenshot%202025-12-04%20at%2018.54.43.png)
-
-
-**For the Grad-CAM:**
-
-
-![Grad-CAM Visualization](Project/Images/Screenshot%202025-12-04%20at%2018.55.11.png)
 
 
 ### Classification Report
@@ -62,9 +48,16 @@ To understand how the CNN makes decisions, we utilized visualization techniques 
 
 The image below shows the output of the second convolutional layer (`conv2`). These maps highlight the specific features (edges, curves, textures) the network is detecting at this stage.
 
+![Activation Maps](Project/Images/Screenshot%202025-12-04%20at%2018.54.43.png)
+
+
 ### Grad-CAM (Class Activation Mapping)
 
 We used Grad-CAM to visualize where the model "looks" when making a prediction. The heatmap overlays the original image, showing the regions of the hand that contributed most to the classification decision.
+
+
+![Grad-CAM Visualization](Project/Images/Screenshot%202025-12-04%20at%2018.55.11.png)
+
 
 -----
 
@@ -224,11 +217,6 @@ Below is the curriculum followed to build this project, ranging from Python basi
 
 -----
 
-## WEEK 7–8: Project
-
-**Repo Structure:**
-
------
 
 ## Acknowledgements
 
