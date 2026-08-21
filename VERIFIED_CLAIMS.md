@@ -4,9 +4,13 @@ Every claim below names the metric, the experiment that produced it and the file
 from. Nothing here is estimated, rounded up, or carried over from the previous version of the
 project. Regenerate all of it with the commands in the README's Reproducibility section.
 
+**Every finding below was run twice**, on Apple MPS locally and on an NVIDIA T4 via Kaggle —
+identical code, split and seeds, but a different RNG stream. Contrasts that keep their sign in both
+environments are reported as findings; one that flipped (§2) is retracted. See `results/CROSS_ENV.md`.
+
 Protocol shared by every number: 29 classes, 29,000 images (1,000/class stratified from 87,000),
 deterministic 70/15/15 split (`split_seed=1234`), **4,350 held-out test images**, Adam lr 1e-3,
-batch 32, best epoch selected on validation macro F1. 16 training runs total.
+batch 32, best epoch selected on validation macro F1. **40 training runs total** (16 local + 24 on Kaggle).
 
 ---
 
@@ -26,32 +30,50 @@ classification report was computed on 28 images — one per class.
 **Replacement.** A real held-out evaluation on 4,350 images gives **93.13% ± 1.65%** for the same
 architecture (`results/baseline_seed{42,43,44}/results.json`).
 
-## 2. Restoring a missing non-linearity is worth +3.5 points
+## 2. RETRACTED — the FC non-linearity fix does not replicate
 
-**Hypothesis.** `self.drop(self.f1(x))` feeds `f2` with no activation between, so the two linear
-layers collapse to a single affine map and the 270-unit layer adds no capacity.
-**Variable.** One `F.relu`. **Constant.** Parameter count, conv stack, optimiser, budget, split.
+**What was claimed.** That restoring the missing activation between the two fully connected
+layers raised accuracy from 93.13% to 96.67%, a +3.5 point gain at identical parameter count.
 
-| Arm | Test accuracy | Macro F1 |
-|---|--:|--:|
-| A · ASLNet (original) | 93.13% ± 1.65 | 0.9313 ± 0.0165 |
-| C · ASLNet-ReLU | **96.67% ± 1.00** | **0.9666 ± 0.0102** |
+**Why it is withdrawn.** Re-running the identical code, split and seeds on a second device
+(NVIDIA T4 vs Apple MPS) reverses the sign of the effect:
 
-Δ = **+3.54 points accuracy**, 3 seeds each.
-Files: `results/baseline_seed*/results.json`, `results/aslnet_relu_seed*/results.json`.
-Test asserting the two models are otherwise identical: `tests/test_pipeline.py::test_relu_variant_differs_only_in_activation`.
+| Budget | Baseline | ASLNet-ReLU | Δ | Pooled sd |
+|---|--:|--:|--:|--:|
+| Local, 10 ep (MPS) | 93.13% ± 1.65 | 96.67% ± 1.00 | **+3.54** | 1.37 |
+| Kaggle, 10 ep (T4) | 93.85% ± 1.73 | 92.85% ± 4.60 | **−1.00** | 3.48 |
+| Kaggle, 30 ep (T4) | 97.30% ± 0.43 | 97.49% ± 1.38 | **+0.19** | 1.03 |
+
+At 30 epochs — where both arms have converged and variance is lowest — the difference is
+**+0.19 points against a pooled sd of 1.03**, i.e. indistinguishable from zero. The `aslnet_relu`
+arm is also the most unstable in the study (Kaggle seeds: 0.9648 / 0.8768 / 0.9439, sd 4.6 points),
+so a 3-seed mean on one device was never enough to establish a 3.5-point effect.
+
+**The observation that remains true.** The architectural fact is still a fact: `self.drop(self.f1(x))`
+feeds `f2` with no activation between them, so at inference the two linear layers collapse to a
+single affine map and the 270-unit hidden layer contributes no representational capacity. What is
+*not* true is that fixing it measurably improves accuracy on this task. The most likely reason is
+that the task does not need the extra capacity — the conv stack already separates the classes.
+
+**How this was caught.** Cross-environment replication (`results/CROSS_ENV.md`). This is the
+single most useful thing in the project: it killed a finding that three seeds on one machine had
+made look solid.
 
 ## 3. Augmentation trades clean accuracy for geometric robustness
 
 **Variable.** `aug.enabled`. **Constant.** Everything else. Perturbations are fixed, not sampled.
 
-Δ accuracy in percentage points, augmented arm minus its non-augmented twin:
+Δ accuracy in percentage points, augmented arm minus its non-augmented twin. Every arm is n = 3.
 
-| Contrast | Budget | Clean | Rot 10° | Rot 20° | Shift 5% | Shift 10% |
-|---|--:|--:|--:|--:|--:|--:|
-| B − A | 10 ep | **−8.8** | +30.6 | +33.7 | +32.5 | **+45.0** |
-| D − C | 10 ep | **−10.0** | +15.3 | +30.2 | +19.3 | **+43.2** |
-| B30 − A30 | 30 ep | **−2.8** | +41.5 | +47.1 | +40.0 | **+56.3** |
+| Environment | Budget | Clean | Rot 10° | Rot 20° | Shift 5% | Shift 10% | Blur σ2 |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| Local (MPS) | 10 ep | −8.8 | +30.6 | +33.7 | +32.5 | **+45.0** | +4.1 |
+| Kaggle (T4) | 10 ep | −8.0 | +35.8 | +32.5 | +39.3 | **+46.6** | +4.2 |
+| Kaggle (T4) | 30 ep | −4.3 | +41.5 | +45.1 | +40.2 | **+55.6** | +11.4 |
+| Kaggle (T4), ReLU variant | 30 ep | −6.8 | +20.6 | +34.8 | +25.0 | **+52.9** | +11.2 |
+
+**All four contrasts agree in sign and rough magnitude across two devices and two budgets.**
+This is the project's most robust finding.
 
 Files: `results/TRADEOFF.md`, `results/*/robustness.json`, produced by `experiments/03_robustness.py`
 and aggregated by `experiments/06_tradeoff.py`.
@@ -62,16 +84,17 @@ and aggregated by `experiments/06_tradeoff.py`.
 the augmented model simply has not converged — the "cost" should shrink with a longer budget.
 **Variable.** Epoch budget (10 → 30). **Constant.** Everything else.
 
-| Budget | Clean-accuracy cost of augmentation | Robustness gain at 10% shift |
-|---|--:|--:|
-| 10 epochs | −8.8 points | +45.0 points |
-| 30 epochs | **−2.8 points** | **+56.3 points** |
+| Environment | 10 epochs | 30 epochs | Change |
+|---|--:|--:|--:|
+| Local (MPS), clean cost | −8.8 | −2.8 (n=1) | −68% |
+| Kaggle (T4), clean cost | −8.0 | **−4.3** | **−46%** |
+| Kaggle (T4), gain at 10% shift | +46.6 | **+55.6** | **+19%** |
 
-Tripling the budget cuts the cost by 68% while *increasing* the benefit. Confirms the hypothesis.
+Tripling the budget roughly halves the cost while *increasing* the benefit. Confirms the hypothesis
+in both environments.
 
-**Caveat that must be stated with this claim:** the 30-epoch augmented arm is **n = 1 seed**
-(`results/augmented_e30_seed42/`), against n = 3 for its baseline. Direction only; not a
-measured mean.
+Replicated at n = 3 per arm on the T4 (`results_kaggle/`): the cost falls from −8.0 to −4.3 points
+while the gain at 10% translation rises from +46.6 to +55.6. Both environments agree.
 
 ## 5. Errors are concentrated and linguistically coherent
 
@@ -126,4 +149,6 @@ Nothing in this repository measures any of the following. Do not put them on a r
 | **Model superiority over any published work** | No external baseline was reproduced or compared against. |
 | **Grad-CAM "proves" the model looks at the hand** | Grad-CAM is a diagnostic. Several confident errors attend to forearm and wall corner, and one attends to nothing at all (all-zero map at p = 0.94). |
 | **Transfer learning / architecture comparison** | The ResNet-18 arm was implemented but never run. |
-| **Any number from the 30-epoch augmented arm as a mean** | n = 1 seed. |
+| **"Fixing the FC non-linearity improved accuracy"** | Retracted — see §2. The effect reverses sign across devices and is +0.19 ± 1.03 at 30 epochs. |
+| **Any single-environment result with n ≤ 3 seeds** | The retraction in §2 is the proof that three seeds on one machine can manufacture a 3.5-point effect that does not exist. |
+| **A best accuracy above ~97.3%** | The best verified arm is `baseline_e30` at 97.30% ± 0.43 (T4, n=3). `aslnet_relu_e30` reads 97.49% but with sd 1.38 and no replication. |
