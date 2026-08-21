@@ -368,14 +368,5 @@ These bound what the results support.
   approximate but do not equal real camera and pose variation.
 * **`J` and `Z` are motion signs.** Both are defined by movement and cannot be fully determined
   from a static frame; the ceiling on those classes is below 100% by construction.
-* **No latency, throughput or deployment measurement** was taken. See
-  [Do not claim yet](#do-not-claim-yet).
-
-## Verified resume claims
-
-<!-- filled in the final report; see VERIFIED_CLAIMS.md -->
-See [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md).
-
-## Do not claim yet
-
-See [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md#do-not-claim-yet).
+* **No latency, throughput or deployment measurement** was taken. 
+  
