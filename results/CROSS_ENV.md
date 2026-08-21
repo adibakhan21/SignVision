@@ -2,17 +2,16 @@
 
 The same code, split and seeds were run in two environments:
 
-| | local | Kaggle |
+| | Environment A | Environment B |
 |---|---|---|
-| device | Apple MPS | NVIDIA T4 (CUDA) |
 | runs | 16 | 24 |
 
-The RNG stream differs between backends, so weight initialisation and shuffle
+The RNG stream differs between environments, so weight initialisation and shuffle
 order diverge. Any gap below is environment + seed noise, not a code difference.
 
 ## Test accuracy by arm
 
-| Arm | local (n) | Kaggle (n) | Δ mean |
+| Arm | Environment A (n) | Environment B (n) | Δ mean |
 |---|--:|--:|--:|
 | `aslnet_relu` | 0.9667 ± 0.0100 (3) | 0.9285 ± 0.0460 (3) | -0.0382 |
 | `aslnet_relu_aug` | 0.8665 ± 0.1009 (3) | 0.8167 ± 0.1463 (3) | -0.0498 |
@@ -25,7 +24,7 @@ order diverge. Any gap below is environment + seed noise, not a code difference.
 
 ## Do the findings survive?
 
-| Contrast | local Δ | Kaggle Δ | same sign? |
+| Contrast | Env A Δ | Env B Δ | same sign? |
 |---|--:|--:|:--:|
 | ReLU fix (aslnet_relu − baseline) | +0.0354 | -0.0100 | **no** |
 | Augmentation cost, 10 ep (augmented − baseline) | -0.0880 | -0.0801 | yes |

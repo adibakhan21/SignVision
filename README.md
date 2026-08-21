@@ -1,7 +1,15 @@
-# SignVision — ASL Alphabet Recognition
+# SignVision — ASL Fingerspelling (Alphabet) Recognition
 
-A convolutional classifier for the 29-class American Sign Language alphabet, rebuilt around
-**controlled experiments** rather than a single accuracy number.
+A convolutional classifier for the 29-class American Sign Language **manual alphabet**, rebuilt
+around **controlled experiments** rather than a single accuracy number.
+
+> **Scope.** This is *fingerspelling* recognition — classifying static handshapes for A–Z plus
+> `space`, `delete` and `nothing` from single frames. It is **not** sign language recognition:
+> ASL is a full language with its own grammar, and its signs are dynamic, two-handed, and carry
+> meaning through movement, facial expression and space. Fingerspelling is one small component,
+> used mainly for proper nouns and words with no established sign. Two letters in the alphabet
+> (`J` and `Z`) are themselves defined by motion and cannot be fully determined from a still
+> image — a ceiling this project measures rather than hides.
 
 The project asks four questions and answers each with a measurement:
 
@@ -42,8 +50,7 @@ The project asks four questions and answers each with a measurement:
 11. [Reproducibility](#reproducibility)
 12. [Repository layout](#repository-layout)
 13. [Limitations](#limitations)
-14. [Verified resume claims](#verified-resume-claims)
-15. [Do not claim yet](#do-not-claim-yet)
+14. [Verified claims](#verified-claims)
 
 ---
 
@@ -97,13 +104,11 @@ all survive — with seeds, a real split, checkpoints and saved metrics added ar
 | Input | 100×100 RGB, scaled to [0,1] |
 | Optimiser | Adam, lr 0.001, batch 32 |
 | Model selection | best epoch by `val_macro_f1` on the validation set |
-| Device | mps |
 | Parameters | 757,433 |
 <!-- /AUTO:setup -->
 
-A stratified subsample is used so the whole experiment suite (24+ training runs) fits on one
-laptop GPU. The cap is applied **identically to every arm**, so it is never the experimental
-variable. Images are decoded and resized once into a `uint8` memmap, which means every arm reads
+A stratified subsample is used so the full experiment suite runs end to end in reasonable time.
+The cap is applied **identically to every arm**, so it is never the experimental variable. Images are decoded and resized once into a `uint8` memmap, which means every arm reads
 byte-identical pixels — removing JPEG-decode variation from the comparison.
 
 The split is driven by a `split_seed` that is **independent of the training seed**, so changing the
@@ -176,6 +181,15 @@ What augmentation *does* buy is in [Robustness](#robustness) — and it is large
 
 ## Error analysis
 
+Row-normalised confusion matrix for the best single run. The diagonal is dense; the
+off-diagonal mass sits in a handful of specific letter pairs rather than spread evenly,
+which is what the ranked table below quantifies.
+
+![Confusion matrix](visualizations/aslnet_relu_seed42/confusion_matrix_normalized.png)
+
+Raw counts: [`confusion_matrix.png`](visualizations/aslnet_relu_seed42/confusion_matrix.png).
+Per-run matrices for all 40 runs are under `visualizations/<run>/`.
+
 <!-- AUTO:errors -->
 Best run: `aslnet_relu_seed42` — 117 errors on 4350 test images (2.69% error rate).
 
@@ -214,6 +228,17 @@ Lowest-recall classes:
 The confusions are **linguistically coherent**, not random. The dominant pairs — `V`↔`U`↔`R`,
 `M`↔`N`, `G`↔`H` — are handshapes that differ only in how many fingers are extended or how far
 apart they are. At 100×100 with two convolutional layers, that distinction is a few pixels wide.
+
+Rather than take that on trust, here are real dataset examples of each recurring pair:
+
+![Confusion pairs](visualizations/confusion_pairs.png)
+
+`M` and `N` are the clearest case: both are a closed fist with the thumb tucked between fingers,
+differing only in whether **three** fingers cover the thumb or **two**. At this resolution, under
+the lighting variation visible above, they are nearly the same image. `U` vs `R` (two fingers
+together vs crossed) and `V` vs `W` (two spread vs three) are the same kind of distinction.
+
+Regenerate with `python experiments/07_confusion_pairs_figure.py`.
 
 `I`→`J` is a different kind of error and worth stating plainly: **`J` is `I` plus a motion trace.**
 A single static frame does not contain the information needed to separate them. No amount of
@@ -368,14 +393,10 @@ These bound what the results support.
   approximate but do not equal real camera and pose variation.
 * **`J` and `Z` are motion signs.** Both are defined by movement and cannot be fully determined
   from a static frame; the ceiling on those classes is below 100% by construction.
-* **No latency, throughput or deployment measurement** was taken. See
-  [Do not claim yet](#do-not-claim-yet).
+* **No latency, throughput or deployment measurement** was taken.
 
-## Verified resume claims
+## Verified claims
 
-<!-- filled in the final report; see VERIFIED_CLAIMS.md -->
-See [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md).
-
-## Do not claim yet
-
-See [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md#do-not-claim-yet).
+Every claim this project supports, with the metric, the experiment that produced it and the file
+it is read from — including one that was **retracted** after it failed to replicate under an
+independent run: [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md).

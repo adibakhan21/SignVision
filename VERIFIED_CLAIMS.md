@@ -4,13 +4,13 @@ Every claim below names the metric, the experiment that produced it and the file
 from. Nothing here is estimated, rounded up, or carried over from the previous version of the
 project. Regenerate all of it with the commands in the README's Reproducibility section.
 
-**Every finding below was run twice**, on Apple MPS locally and on an NVIDIA T4 via Kaggle —
+**Every finding below was run twice**, in two independent execution environments —
 identical code, split and seeds, but a different RNG stream. Contrasts that keep their sign in both
 environments are reported as findings; one that flipped (§2) is retracted. See `results/CROSS_ENV.md`.
 
 Protocol shared by every number: 29 classes, 29,000 images (1,000/class stratified from 87,000),
 deterministic 70/15/15 split (`split_seed=1234`), **4,350 held-out test images**, Adam lr 1e-3,
-batch 32, best epoch selected on validation macro F1. **40 training runs total** (16 local + 24 on Kaggle).
+batch 32, best epoch selected on validation macro F1. **40 training runs total** across the two environments.
 
 ---
 
@@ -35,14 +35,14 @@ architecture (`results/baseline_seed{42,43,44}/results.json`).
 **What was claimed.** That restoring the missing activation between the two fully connected
 layers raised accuracy from 93.13% to 96.67%, a +3.5 point gain at identical parameter count.
 
-**Why it is withdrawn.** Re-running the identical code, split and seeds on a second device
-(NVIDIA T4 vs Apple MPS) reverses the sign of the effect:
+**Why it is withdrawn.** Re-running the identical code, split and seeds in a second environment
+reverses the sign of the effect:
 
 | Budget | Baseline | ASLNet-ReLU | Δ | Pooled sd |
 |---|--:|--:|--:|--:|
-| Local, 10 ep (MPS) | 93.13% ± 1.65 | 96.67% ± 1.00 | **+3.54** | 1.37 |
-| Kaggle, 10 ep (T4) | 93.85% ± 1.73 | 92.85% ± 4.60 | **−1.00** | 3.48 |
-| Kaggle, 30 ep (T4) | 97.30% ± 0.43 | 97.49% ± 1.38 | **+0.19** | 1.03 |
+| Environment A, 10 ep | 93.13% ± 1.65 | 96.67% ± 1.00 | **+3.54** | 1.37 |
+| Environment B, 10 ep | 93.85% ± 1.73 | 92.85% ± 4.60 | **−1.00** | 3.48 |
+| Environment B, 30 ep | 97.30% ± 0.43 | 97.49% ± 1.38 | **+0.19** | 1.03 |
 
 At 30 epochs — where both arms have converged and variance is lowest — the difference is
 **+0.19 points against a pooled sd of 1.03**, i.e. indistinguishable from zero. The `aslnet_relu`
@@ -67,10 +67,10 @@ made look solid.
 
 | Environment | Budget | Clean | Rot 10° | Rot 20° | Shift 5% | Shift 10% | Blur σ2 |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| Local (MPS) | 10 ep | −8.8 | +30.6 | +33.7 | +32.5 | **+45.0** | +4.1 |
-| Kaggle (T4) | 10 ep | −8.0 | +35.8 | +32.5 | +39.3 | **+46.6** | +4.2 |
-| Kaggle (T4) | 30 ep | −4.3 | +41.5 | +45.1 | +40.2 | **+55.6** | +11.4 |
-| Kaggle (T4), ReLU variant | 30 ep | −6.8 | +20.6 | +34.8 | +25.0 | **+52.9** | +11.2 |
+| Environment A | 10 ep | −8.8 | +30.6 | +33.7 | +32.5 | **+45.0** | +4.1 |
+| Environment B | 10 ep | −8.0 | +35.8 | +32.5 | +39.3 | **+46.6** | +4.2 |
+| Environment B | 30 ep | −4.3 | +41.5 | +45.1 | +40.2 | **+55.6** | +11.4 |
+| Environment B, ReLU variant | 30 ep | −6.8 | +20.6 | +34.8 | +25.0 | **+52.9** | +11.2 |
 
 **All four contrasts agree in sign and rough magnitude across two devices and two budgets.**
 This is the project's most robust finding.
@@ -86,14 +86,14 @@ the augmented model simply has not converged — the "cost" should shrink with a
 
 | Environment | 10 epochs | 30 epochs | Change |
 |---|--:|--:|--:|
-| Local (MPS), clean cost | −8.8 | −2.8 (n=1) | −68% |
-| Kaggle (T4), clean cost | −8.0 | **−4.3** | **−46%** |
-| Kaggle (T4), gain at 10% shift | +46.6 | **+55.6** | **+19%** |
+| Environment A, clean cost | −8.8 | −2.8 (n=1) | −68% |
+| Environment B, clean cost | −8.0 | **−4.3** | **−46%** |
+| Environment B, gain at 10% shift | +46.6 | **+55.6** | **+19%** |
 
 Tripling the budget roughly halves the cost while *increasing* the benefit. Confirms the hypothesis
 in both environments.
 
-Replicated at n = 3 per arm on the T4 (`results_kaggle/`): the cost falls from −8.0 to −4.3 points
+Replicated at n = 3 per arm in Environment B (`results_kaggle/`): the cost falls from −8.0 to −4.3 points
 while the gain at 10% translation rises from +46.6 to +55.6. Both environments agree.
 
 ## 5. Errors are concentrated and linguistically coherent
@@ -151,4 +151,4 @@ Nothing in this repository measures any of the following. Do not put them on a r
 | **Transfer learning / architecture comparison** | The ResNet-18 arm was implemented but never run. |
 | **"Fixing the FC non-linearity improved accuracy"** | Retracted — see §2. The effect reverses sign across devices and is +0.19 ± 1.03 at 30 epochs. |
 | **Any single-environment result with n ≤ 3 seeds** | The retraction in §2 is the proof that three seeds on one machine can manufacture a 3.5-point effect that does not exist. |
-| **A best accuracy above ~97.3%** | The best verified arm is `baseline_e30` at 97.30% ± 0.43 (T4, n=3). `aslnet_relu_e30` reads 97.49% but with sd 1.38 and no replication. |
+| **A best accuracy above ~97.3%** | The best verified arm is `baseline_e30` at 97.30% ± 0.43 (n=3). `aslnet_relu_e30` reads 97.49% but with sd 1.38 and no replication. |

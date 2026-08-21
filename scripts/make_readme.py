@@ -191,7 +191,6 @@ def block_setup(runs) -> str:
         f"| Input | {d['image_size']}×{d['image_size']} RGB, scaled to [0,1] |",
         f"| Optimiser | {t['optimizer'].title()}, lr {t['lr']}, batch {t['batch_size']} |",
         f"| Model selection | best epoch by `{t['select_on']}` on the validation set |",
-        f"| Device | {r['device']} |",
         f"| Parameters | {r['params']['total']:,} |",
     ])
 
