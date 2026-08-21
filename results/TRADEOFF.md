@@ -1,0 +1,20 @@
+# Clean-vs-robust trade-off
+
+Accuracy on the same held-out test set, mean ± sd across seeds.
+
+| Arm | Seeds | clean | rotation:10deg | rotation:20deg | translation:5pct | translation:10pct | blur:sigma2.0 | brightness:x0.6 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `aslnet_relu` | 3 | 0.9667 ± 0.0100 | 0.6610 ± 0.0801 | 0.3057 ± 0.0462 | 0.6392 ± 0.1136 | 0.2911 ± 0.0643 | 0.8264 ± 0.0251 | 0.8372 ± 0.0626 |
+| `aslnet_relu_aug` | 3 | 0.8665 ± 0.1009 | 0.8144 ± 0.1120 | 0.6080 ± 0.1300 | 0.8318 ± 0.1061 | 0.7233 ± 0.1366 | 0.7254 ± 0.1015 | 0.8367 ± 0.0949 |
+| `augmented` | 3 | 0.8434 ± 0.0259 | 0.7733 ± 0.0421 | 0.5360 ± 0.0647 | 0.8104 ± 0.0320 | 0.7016 ± 0.0337 | 0.6491 ± 0.0092 | 0.8080 ± 0.0320 |
+| `augmented_e30` | 1 | 0.9343 | 0.8878 | 0.6667 | 0.9122 | 0.8345 | 0.7039 | 0.9002 |
+| `baseline` | 3 | 0.9313 ± 0.0165 | 0.4671 ± 0.0529 | 0.1991 ± 0.0659 | 0.4859 ± 0.0401 | 0.2512 ± 0.0356 | 0.6077 ± 0.0899 | 0.7831 ± 0.0572 |
+| `baseline_e30` | 3 | 0.9618 ± 0.0016 | 0.4733 ± 0.0788 | 0.1952 ± 0.0713 | 0.5123 ± 0.0595 | 0.2712 ± 0.0249 | 0.6063 ± 0.0616 | 0.8004 ± 0.0525 |
+
+## What augmentation costs and buys (Δ accuracy, percentage points)
+
+| Contrast | clean | rotation:10deg | rotation:20deg | translation:5pct | translation:10pct | blur:sigma2.0 | brightness:x0.6 |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| `augmented` − `baseline` | -8.8 | +30.6 | +33.7 | +32.5 | +45.0 | +4.1 | +2.5 |
+| `aslnet_relu_aug` − `aslnet_relu` | -10.0 | +15.3 | +30.2 | +19.3 | +43.2 | -10.1 | -0.0 |
+| `augmented_e30` − `baseline_e30` | -2.8 | +41.5 | +47.1 | +40.0 | +56.3 | +9.8 | +10.0 |

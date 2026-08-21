@@ -1,0 +1,17 @@
+{
+  "gradcam_layer": "c2 (second conv layer, 27 channels)",
+  "panels": {
+    "correct": "/Users/dhruvgaur/Desktop/claude/SignVision/visualizations/aslnet_relu_seed42/gradcam_correct.png",
+    "incorrect": "/Users/dhruvgaur/Desktop/claude/SignVision/visualizations/aslnet_relu_seed42/gradcam_incorrect.png"
+  },
+  "activation_maps": {
+    "layer": "c2 (second conv layer, 27 channels)",
+    "n_channels": 27,
+    "spatial": [
+      20,
+      20
+    ],
+    "example_true": "L",
+    "example_pred": "L"
+  }
+}

@@ -1,0 +1,19 @@
+# Datasets and derived caches are large; regenerate with scripts/download_data.py
+data/
+!data/.gitkeep
+
+# Training artefacts
+checkpoints/*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
+kaggle/
+kaggle/
+kaggle/
