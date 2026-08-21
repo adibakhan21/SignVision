@@ -376,6 +376,49 @@ tests/              20 tests over splitting, metrics, error analysis, Grad-CAM
 Project/            the original notebook and figures, kept as the historical record
 ```
 
+### What each run writes
+
+Every training run produces its own directory. No metric in this README is typed by hand —
+all of them are read back from these files by `experiments/05_report.py` and
+`scripts/make_readme.py`.
+
+```
+results/<arm>_seed<n>/
+├── config.json                 every hyperparameter that produced the run
+├── results.json                metrics, per-epoch history, raw predictions
+├── classification_report.txt   sklearn per-class report, 4 decimals
+├── robustness.json             accuracy under each of the 12 perturbations
+├── error_analysis.json         confusion pairs, per-class errors, concentration
+└── robustness.csv              the same robustness numbers, flat
+```
+
+**`results.json`** — the primary record.
+
+| Field | Contents |
+|---|---|
+| `test_metrics`, `val_metrics` | `accuracy`, `precision_macro`, `recall_macro`, `macro_f1`, `precision_weighted`, `recall_weighted`, `weighted_f1`, `n_samples` |
+| `test_metrics.per_class` | `precision`, `recall`, `f1`, `support` for each of the 29 classes |
+| `test_metrics.confusion_matrix` | full 29×29 matrix, row = true, column = predicted |
+| `history` | per epoch: `train_loss`, `train_acc`, `val_acc`, `val_macro_f1`, `seconds` |
+| `predictions` | `y_true`, `y_pred`, `max_prob` (softmax confidence), `test_indices` |
+| `best_epoch`, `best_val_score` | epoch selected on validation macro F1 |
+| `params` | `total` / `trainable` parameter counts |
+| `split_sizes` | train / val / test counts |
+
+Macro averages weight every class equally, so a failure on one letter is not hidden by 28
+others; weighted averages weight by support. Both are reported because the split is balanced
+(150 test images per class) and any gap between them signals a class-specific problem.
+
+**`robustness.json`** — `clean` metrics plus one row per perturbation with `family`, `severity`,
+`accuracy`, `macro_f1`, `weighted_f1`, `delta_accuracy`, `delta_macro_f1` and
+`relative_accuracy_drop`.
+
+**`error_analysis.json`** — `confusion_pairs` (`true`, `predicted`, `count`,
+`share_of_all_errors`, `share_of_class_support`), `class_table` (support, correct, errors,
+recall, precision, error rate per class), `concentration` (what share of all errors the top
+1/3/5/10 pairs account for), and `examples` (indices of the most and least confident correct
+and incorrect predictions, used to draw the example grids).
+
 ## Limitations
 
 These bound what the results support.
