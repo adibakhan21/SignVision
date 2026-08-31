@@ -4,13 +4,16 @@ Every claim below names the metric, the experiment that produced it and the file
 from. Nothing here is estimated, rounded up, or carried over from the previous version of the
 project. Regenerate all of it with the commands in the README's Reproducibility section.
 
-**Every finding below was run twice**, in two independent execution environments —
+**Every finding in §1–§6 was run twice**, in two independent execution environments —
 identical code, split and seeds, but a different RNG stream. Contrasts that keep their sign in both
 environments are reported as findings; one that flipped (§2) is retracted. See `results/CROSS_ENV.md`.
+**§7 is the one exception and is marked pending**: it is sign-stable across three seeds but has been
+run in one environment only, so by the rule that produced §2 it is not yet a finding.
 
 Protocol shared by every number: 29 classes, 29,000 images (1,000/class stratified from 87,000),
 deterministic 70/15/15 split (`split_seed=1234`), **4,350 held-out test images**, Adam lr 1e-3,
-batch 32, best epoch selected on validation macro F1. **40 training runs total** across the two environments.
+batch 32, best epoch selected on validation macro F1. **43 training runs total** — 40 across the two
+environments for §1–§6, plus the 3-seed §7 arm in Environment A only.
 
 ---
 
@@ -134,6 +137,62 @@ encoded in the FC weights and a shift moves every feature onto weights that neve
 
 ---
 
+## 7. Removing the flatten buys rotation robustness and sells photometric robustness
+
+> **Single environment only (n = 3 seeds, Environment A).** Every contrast below is sign-stable
+> across three seeds, but has **not** yet been replicated in a second environment. Under the rule
+> that produced the retraction in §2, that is not enough to state as a finding. Treat this section
+> as pending until the arm is re-run on Environment B.
+
+**Hypothesis.** §6 proposed a mechanism for the geometric brittleness: `ASLNetOriginal` flattens the
+27x10x10 map straight into a fully connected layer, so absolute position is encoded in that weight
+matrix. If that is the cause, removing the flatten should recover geometric robustness.
+
+**Variable.** `flatten -> Linear(2700, 270)` replaced by global average pooling -> `Linear(27, 270)`.
+**Constant.** Conv stack, head widths, the missing FC non-linearity, epoch budget, split, seeds,
+optimiser, evaluation set. Parameters fall from **757,433 to 35,723** (21.2x) as a consequence.
+
+Δ accuracy in percentage points, `aslnet_gap_e30` minus `baseline_e30`, both n = 3 at 30 epochs.
+
+| Perturbation | `baseline_e30` | `aslnet_gap_e30` | Δ | Per-seed Δ | Sign stable? |
+|---|--:|--:|--:|---|:--:|
+| clean | 96.18% ± 0.16 | 94.04% ± 1.59 | −2.1 | −1.4 / −3.8 / −1.2 | yes |
+| rotation 5° | 66.51% ± 5.47 | 78.80% ± 1.34 | **+12.3** | +5.4 / +15.8 / +15.6 | yes |
+| rotation 10° | 47.33% ± 7.88 | 61.14% ± 2.18 | **+13.8** | +8.1 / +8.9 / +24.4 | yes |
+| rotation 20° | 19.52% ± 7.13 | 28.92% ± 3.82 | **+9.4** | +1.2 / +7.8 / +19.1 | yes |
+| blur σ1.0 | 83.43% ± 1.08 | 88.02% ± 1.95 | +4.6 | +6.2 / +1.1 / +6.4 | yes |
+| blur σ0.5 | 95.36% ± 0.41 | 93.47% ± 1.58 | −1.9 | −0.5 / −4.2 / −1.0 | yes |
+| brightness ×0.8 | 92.80% ± 1.91 | 87.09% ± 2.96 | −5.7 | −3.8 / −10.7 / −2.7 | yes |
+| brightness ×0.6 | 80.04% ± 5.25 | 52.05% ± 3.75 | **−28.0** | −24.4 / −32.8 / −26.7 | yes |
+| **translation 5%** | 51.23% ± 5.95 | 59.26% ± 4.08 | +8.0 | −1.4 / +17.0 / +8.4 | **no** |
+| **translation 10%** | 27.12% ± 2.49 | 28.87% ± 8.60 | +1.7 | +5.4 / −7.4 / +7.2 | **no** |
+| **translation 15%** | 16.85% ± 5.97 | 15.47% ± 7.06 | −1.4 | +13.5 / −10.5 / −7.2 | **no** |
+| brightness ×1.4 | 83.89% ± 1.39 | 81.59% ± 6.07 | −2.3 | +1.0 / +0.3 / −8.2 | **no** |
+| blur σ2.0 | 60.63% ± 6.16 | 56.47% ± 2.70 | −4.2 | −10.1 / −8.1 / +5.7 | **no** |
+
+**What the hypothesis got right.** Rotation robustness improves at all three severities, sign-stable,
+and with markedly tighter seed spread than the baseline (±1.34 vs ±5.47 at 10°). The flatten does
+encode orientation-sensitive position information, and removing it recovers some of that — at 21x
+fewer parameters and 2.1 points of clean accuracy.
+
+**What the hypothesis got wrong.** **Translation does not improve.** All three translation contrasts
+flip sign across seeds and cannot be claimed in either direction. Since the flatten is demonstrably
+not the fix, the dominant cause of translation brittleness must sit **upstream of it** — the two
+strided max-pools (4x4 then 2x2) change which pixels each window samples when the input shifts, and
+that information is already lost before the classifier head is reached. Global average pooling
+cannot repair damage done two layers earlier.
+
+**The trade-off appears a third time.** Augmentation trades clean accuracy for geometric robustness
+(§3). Global average pooling trades **photometric** robustness for geometric robustness: −28.0 points
+at brightness ×0.6, the largest single regression in the study. Pooling collapses each channel to one
+average, so a global intensity change scales all 27 inputs together with no spatial pattern left to
+disambiguate. On this task, robustness is consistently bought rather than gained.
+
+Files: `results/aslnet_gap_e30_seed{42,43,44}/robustness.json`, `results/TRADEOFF.md`.
+Reproduce with `./scripts/run_grid_gap.sh`.
+
+---
+
 # Do not claim yet
 
 Nothing in this repository measures any of the following. Do not put them on a resume.
@@ -150,5 +209,7 @@ Nothing in this repository measures any of the following. Do not put them on a r
 | **Grad-CAM "proves" the model looks at the hand** | Grad-CAM is a diagnostic. Several confident errors attend to forearm and wall corner, and one attends to nothing at all (all-zero map at p = 0.94). |
 | **Transfer learning / architecture comparison** | The ResNet-18 arm was implemented but never run. |
 | **"Fixing the FC non-linearity improved accuracy"** | Retracted — see §2. The effect reverses sign across devices and is +0.19 ± 1.03 at 30 epochs. |
+| **"Global average pooling fixes the translation brittleness"** | It does not. All three translation contrasts flip sign across seeds (§7). The mechanism in §6 explains rotation, not translation. |
+| **Anything in §7, until it is re-run on a second environment** | Sign-stable across 3 seeds in one environment only. §2 is the proof that this is not sufficient. |
 | **Any single-environment result with n ≤ 3 seeds** | The retraction in §2 is the proof that three seeds on one machine can manufacture a 3.5-point effect that does not exist. |
 | **A best accuracy above ~97.3%** | The best verified arm is `baseline_e30` at 97.30% ± 0.43 (n=3). `aslnet_relu_e30` reads 97.49% but with sd 1.38 and no replication. |

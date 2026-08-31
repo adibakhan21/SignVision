@@ -104,7 +104,7 @@ all survive — with seeds, a real split, checkpoints and saved metrics added ar
 | Input | 100×100 RGB, scaled to [0,1] |
 | Optimiser | Adam, lr 0.001, batch 32 |
 | Model selection | best epoch by `val_macro_f1` on the validation set |
-| Parameters | 757,433 |
+| Parameters | 757,433 (`aslnet_original`) |
 <!-- /AUTO:setup -->
 
 A stratified subsample is used so the full experiment suite runs end to end in reasonable time.
@@ -126,6 +126,14 @@ flatten → Linear(→270) → Dropout(0.5) → Linear(→29)
 
 `ASLNetReLU` is the same network with a ReLU restored between the two linear layers — identical
 parameter count, identical convolutional features, one changed activation.
+
+`ASLNetGAP` replaces the flatten with global average pooling — same conv stack, same head widths,
+same missing FC non-linearity, so the pooling is the only variable. `ASLNetOriginal` flattens the
+27×10×10 map into 2,700 position-addressed inputs, which puts **96% of its parameters in one layer**
+and encodes absolute position in that weight matrix; averaging each channel over space discards
+position by construction and leaves **35,723** parameters instead of 757,433. The arm exists to test
+whether that flatten is the cause of the geometric brittleness measured in
+[Robustness](#robustness) — see [`VERIFIED_CLAIMS.md`](VERIFIED_CLAIMS.md) for what replicated.
 
 Augmentation (arms B and D) adds random affine (±12° rotation, ±10% translation, 0.9–1.1 scale)
 and colour jitter (brightness/contrast 0.25, saturation 0.15, hue 0.02).
@@ -155,6 +163,7 @@ Held-out test set. Mean ± sd across 3 seeds.
 | D · ASLNet-ReLU + augmentation | 10 | 3 | 86.65% ± 10.09 | 0.8651 ± 0.1044 | 0.8651 ± 0.1044 |
 | A30 · Baseline, 30 epochs | 30 | 3 | 96.18% ± 0.16 | 0.9618 ± 0.0015 | 0.9618 ± 0.0015 |
 | B30 · Baseline + augmentation, 30 epochs | 30 | 1 | 93.43% | 0.9347 | 0.9347 |
+| F30 · ASLNet-GAP (flatten replaced by pooling), 30 epochs | 30 | 3 | 94.04% ± 1.59 | 0.9405 ± 0.0158 | 0.9405 ± 0.0158 |
 <!-- /AUTO:main -->
 
 ![Training curves](visualizations/all_training_curves.png)
@@ -260,6 +269,7 @@ perturbations. Severities are not sampled, so the numbers are repeatable.
 | D · ASLNet-ReLU + augmentation | 3 | 86.65% ± 10.09 | 81.44% ± 11.20 | 60.80% ± 13.00 | 83.18% ± 10.61 | 72.33% ± 13.66 | 72.54% ± 10.15 | 83.67% ± 9.49 |
 | A30 · Baseline, 30 epochs | 3 | 96.18% ± 0.16 | 47.33% ± 7.88 | 19.52% ± 7.13 | 51.23% ± 5.95 | 27.12% ± 2.49 | 60.63% ± 6.16 | 80.04% ± 5.25 |
 | B30 · Baseline + augmentation, 30 epochs | 1 | 93.43% | 88.78% | 66.67% | 91.22% | 83.45% | 70.39% | 90.02% |
+| F30 · ASLNet-GAP (flatten replaced by pooling), 30 epochs | 3 | 94.04% ± 1.59 | 61.14% ± 2.18 | 28.92% ± 3.82 | 59.26% ± 4.08 | 28.87% ± 8.60 | 56.47% ± 2.70 | 52.05% ± 3.75 |
 <!-- /AUTO:robust -->
 
 ![Robustness](visualizations/aslnet_relu_seed42/robustness.png)

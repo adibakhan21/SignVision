@@ -7,6 +7,9 @@ Every number below was written by a script in `experiments/` and read back from
 
 | Run | Model | Aug | Seed | Params | Best ep | Test acc | Macro F1 | Weighted F1 | Macro P | Macro R |
 |---|---|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `aslnet_gap_e30_seed42` | aslnet_gap | no | 42 | 35,723 | 28 | 0.9497 | 0.9500 | 0.9500 | 0.9516 | 0.9497 |
+| `aslnet_gap_e30_seed43` | aslnet_gap | no | 43 | 35,723 | 27 | 0.9221 | 0.9222 | 0.9222 | 0.9254 | 0.9221 |
+| `aslnet_gap_e30_seed44` | aslnet_gap | no | 44 | 35,723 | 28 | 0.9494 | 0.9492 | 0.9492 | 0.9507 | 0.9494 |
 | `baseline_e30_seed42` | aslnet_original | no | 42 | 757,433 | 24 | 0.9634 | 0.9634 | 0.9634 | 0.9639 | 0.9634 |
 | `baseline_seed42` | aslnet_original | no | 42 | 757,433 | 10 | 0.9501 | 0.9501 | 0.9501 | 0.9515 | 0.9501 |
 | `baseline_e30_seed43` | aslnet_original | no | 43 | 757,433 | 30 | 0.9602 | 0.9603 | 0.9603 | 0.9613 | 0.9602 |
@@ -28,6 +31,7 @@ Every number below was written by a script in `experiments/` and read back from
 
 | Arm | Seeds | Test acc | Macro F1 | Weighted F1 |
 |---|--:|--:|--:|--:|
+| aslnet_gap|aug=False | 3 | 0.9404 ± 0.0159 | 0.9405 ± 0.0158 | 0.9405 ± 0.0158 |
 | aslnet_original|aug=False | 6 | 0.9466 ± 0.0197 | 0.9465 ± 0.0198 | 0.9465 ± 0.0198 |
 | aslnet_original|aug=True | 4 | 0.8661 ± 0.0501 | 0.8662 ± 0.0508 | 0.8662 ± 0.0508 |
 | aslnet_relu|aug=False | 3 | 0.9667 ± 0.0100 | 0.9666 ± 0.0102 | 0.9666 ± 0.0102 |
@@ -42,6 +46,63 @@ Every number below was written by a script in `experiments/` and read back from
 | Weighted F1 | 0.9465 | 0.8662 | -0.0804 | -8.49% |
 
 Averaged over 4 seed(s) per arm. No significance test was run; treat the direction, not the magnitude, as the finding.
+
+## Robustness — `aslnet_gap_e30_seed42`
+
+Clean test accuracy 0.9497, macro F1 0.9500.
+
+| Perturbation | Accuracy | Δ acc | Macro F1 | Δ macro F1 | Rel. acc drop |
+|---|--:|--:|--:|--:|--:|
+| rotation 5deg | 0.7809 | -0.1687 | 0.7808 | -0.1692 | 17.77% |
+| rotation 10deg | 0.6179 | -0.3317 | 0.6167 | -0.3333 | 34.93% |
+| rotation 20deg | 0.2869 | -0.6628 | 0.2583 | -0.6917 | 69.79% |
+| brightness x0.6 | 0.5556 | -0.3940 | 0.5644 | -0.3856 | 41.49% |
+| brightness x0.8 | 0.8947 | -0.0549 | 0.8950 | -0.0550 | 5.79% |
+| brightness x1.4 | 0.8437 | -0.1060 | 0.8397 | -0.1102 | 11.16% |
+| blur sigma0.5 | 0.9453 | -0.0044 | 0.9456 | -0.0043 | 0.46% |
+| blur sigma1.0 | 0.8929 | -0.0568 | 0.8935 | -0.0565 | 5.98% |
+| blur sigma2.0 | 0.5559 | -0.3938 | 0.5604 | -0.3895 | 41.47% |
+| translation 5pct | 0.5662 | -0.3834 | 0.5555 | -0.3945 | 40.38% |
+| translation 10pct | 0.3531 | -0.5966 | 0.3611 | -0.5888 | 62.82% |
+| translation 15pct | 0.2354 | -0.7143 | 0.2064 | -0.7436 | 75.21% |
+
+## Robustness — `aslnet_gap_e30_seed43`
+
+Clean test accuracy 0.9221, macro F1 0.9222.
+
+| Perturbation | Accuracy | Δ acc | Macro F1 | Δ macro F1 | Rel. acc drop |
+|---|--:|--:|--:|--:|--:|
+| rotation 5deg | 0.7795 | -0.1425 | 0.7706 | -0.1516 | 15.46% |
+| rotation 10deg | 0.5871 | -0.3349 | 0.5768 | -0.3454 | 36.33% |
+| rotation 20deg | 0.2522 | -0.6699 | 0.2281 | -0.6941 | 72.65% |
+| brightness x0.6 | 0.5248 | -0.3972 | 0.5551 | -0.3671 | 43.08% |
+| brightness x0.8 | 0.8377 | -0.0844 | 0.8404 | -0.0817 | 9.15% |
+| brightness x1.4 | 0.8577 | -0.0644 | 0.8538 | -0.0683 | 6.98% |
+| blur sigma0.5 | 0.9166 | -0.0055 | 0.9166 | -0.0055 | 0.60% |
+| blur sigma1.0 | 0.8577 | -0.0644 | 0.8574 | -0.0648 | 6.98% |
+| blur sigma2.0 | 0.5432 | -0.3789 | 0.5474 | -0.3748 | 41.09% |
+| translation 5pct | 0.6395 | -0.2825 | 0.6434 | -0.2788 | 30.64% |
+| translation 10pct | 0.1910 | -0.7310 | 0.1906 | -0.7316 | 79.28% |
+| translation 15pct | 0.1044 | -0.8177 | 0.0890 | -0.8331 | 88.68% |
+
+## Robustness — `aslnet_gap_e30_seed44`
+
+Clean test accuracy 0.9494, macro F1 0.9492.
+
+| Perturbation | Accuracy | Δ acc | Macro F1 | Δ macro F1 | Rel. acc drop |
+|---|--:|--:|--:|--:|--:|
+| rotation 5deg | 0.8034 | -0.1460 | 0.8037 | -0.1455 | 15.38% |
+| rotation 10deg | 0.6292 | -0.3202 | 0.6330 | -0.3163 | 33.73% |
+| rotation 20deg | 0.3285 | -0.6209 | 0.3148 | -0.6344 | 65.40% |
+| brightness x0.6 | 0.4809 | -0.4685 | 0.4729 | -0.4764 | 49.35% |
+| brightness x0.8 | 0.8802 | -0.0692 | 0.8806 | -0.0686 | 7.29% |
+| brightness x1.4 | 0.7462 | -0.2032 | 0.7329 | -0.2163 | 21.40% |
+| blur sigma0.5 | 0.9423 | -0.0071 | 0.9422 | -0.0070 | 0.75% |
+| blur sigma1.0 | 0.8899 | -0.0595 | 0.8901 | -0.0592 | 6.27% |
+| blur sigma2.0 | 0.5949 | -0.3545 | 0.5960 | -0.3532 | 37.34% |
+| translation 5pct | 0.5720 | -0.3775 | 0.5565 | -0.3927 | 39.76% |
+| translation 10pct | 0.3218 | -0.6276 | 0.3090 | -0.6402 | 66.10% |
+| translation 15pct | 0.1244 | -0.8251 | 0.1138 | -0.8354 | 86.90% |
 
 ## Robustness — `aslnet_relu_aug_seed42`
 
@@ -346,6 +407,111 @@ Clean test accuracy 0.9246, macro F1 0.9244.
 | translation 5pct | 0.4929 | -0.4317 | 0.5038 | -0.4207 | 46.69% |
 | translation 10pct | 0.2276 | -0.6970 | 0.2251 | -0.6993 | 75.39% |
 | translation 15pct | 0.1393 | -0.7853 | 0.1227 | -0.8017 | 84.93% |
+
+## Error analysis — `aslnet_gap_e30_seed42`
+
+219 errors out of 4350 test images (5.03% error rate).
+
+* Top-1 confusion pairs account for **10.0%** of all errors (22/219).
+* Top-3 confusion pairs account for **25.1%** of all errors (55/219).
+* Top-5 confusion pairs account for **32.9%** of all errors (72/219).
+* Top-10 confusion pairs account for **47.0%** of all errors (103/219).
+
+| True | Predicted | Count | % of all errors | % of class support |
+|---|---|--:|--:|--:|
+| R | U | 22 | 10.0% | 14.7% |
+| M | N | 20 | 9.1% | 13.3% |
+| X | S | 13 | 5.9% | 8.7% |
+| K | V | 9 | 4.1% | 6.0% |
+| A | E | 8 | 3.7% | 5.3% |
+| N | M | 8 | 3.7% | 5.3% |
+| I | E | 7 | 3.2% | 4.7% |
+| W | V | 6 | 2.7% | 4.0% |
+| J | G | 5 | 2.3% | 3.3% |
+| U | R | 5 | 2.3% | 3.3% |
+
+Lowest-recall classes:
+
+| Class | Support | Recall | Precision | Errors |
+|---|--:|--:|--:|--:|
+| M | 150 | 0.8533 | 0.9078 | 22 |
+| R | 150 | 0.8533 | 0.9412 | 22 |
+| X | 150 | 0.8933 | 0.9306 | 16 |
+| U | 150 | 0.9067 | 0.8193 | 14 |
+| A | 150 | 0.9133 | 0.9648 | 13 |
+| K | 150 | 0.9200 | 0.9928 | 12 |
+| N | 150 | 0.9200 | 0.8571 | 12 |
+| V | 150 | 0.9200 | 0.8961 | 12 |
+
+## Error analysis — `aslnet_gap_e30_seed43`
+
+339 errors out of 4350 test images (7.79% error rate).
+
+* Top-1 confusion pairs account for **5.3%** of all errors (18/339).
+* Top-3 confusion pairs account for **15.0%** of all errors (51/339).
+* Top-5 confusion pairs account for **21.8%** of all errors (74/339).
+* Top-10 confusion pairs account for **34.8%** of all errors (118/339).
+
+| True | Predicted | Count | % of all errors | % of class support |
+|---|---|--:|--:|--:|
+| Q | del | 18 | 5.3% | 12.0% |
+| M | N | 17 | 5.0% | 11.3% |
+| R | U | 16 | 4.7% | 10.7% |
+| V | W | 12 | 3.5% | 8.0% |
+| X | S | 11 | 3.2% | 7.3% |
+| N | M | 10 | 2.9% | 6.7% |
+| B | U | 9 | 2.7% | 6.0% |
+| T | Y | 9 | 2.7% | 6.0% |
+| B | E | 8 | 2.4% | 5.3% |
+| U | R | 8 | 2.4% | 5.3% |
+
+Lowest-recall classes:
+
+| Class | Support | Recall | Precision | Errors |
+|---|--:|--:|--:|--:|
+| V | 150 | 0.7800 | 0.9286 | 33 |
+| M | 150 | 0.8200 | 0.9044 | 27 |
+| Q | 150 | 0.8333 | 0.9542 | 25 |
+| R | 150 | 0.8333 | 0.8865 | 25 |
+| N | 150 | 0.8533 | 0.8707 | 22 |
+| T | 150 | 0.8733 | 0.8973 | 19 |
+| X | 150 | 0.8733 | 0.8973 | 19 |
+| B | 150 | 0.8800 | 0.9706 | 18 |
+
+## Error analysis — `aslnet_gap_e30_seed44`
+
+220 errors out of 4350 test images (5.06% error rate).
+
+* Top-1 confusion pairs account for **5.5%** of all errors (12/220).
+* Top-3 confusion pairs account for **14.5%** of all errors (32/220).
+* Top-5 confusion pairs account for **22.3%** of all errors (49/220).
+* Top-10 confusion pairs account for **36.8%** of all errors (81/220).
+
+| True | Predicted | Count | % of all errors | % of class support |
+|---|---|--:|--:|--:|
+| M | N | 12 | 5.5% | 8.0% |
+| N | M | 10 | 4.5% | 6.7% |
+| X | U | 10 | 4.5% | 6.7% |
+| W | V | 9 | 4.1% | 6.0% |
+| T | N | 8 | 3.6% | 5.3% |
+| A | E | 7 | 3.2% | 4.7% |
+| Z | L | 7 | 3.2% | 4.7% |
+| V | W | 6 | 2.7% | 4.0% |
+| V | U | 6 | 2.7% | 4.0% |
+| T | Y | 6 | 2.7% | 4.0% |
+
+Lowest-recall classes:
+
+| Class | Support | Recall | Precision | Errors |
+|---|--:|--:|--:|--:|
+| T | 150 | 0.8067 | 0.9680 | 29 |
+| X | 150 | 0.8533 | 0.9624 | 22 |
+| M | 150 | 0.8867 | 0.9172 | 17 |
+| V | 150 | 0.8933 | 0.8874 | 16 |
+| Z | 150 | 0.9000 | 0.9926 | 15 |
+| A | 150 | 0.9133 | 0.9514 | 13 |
+| U | 150 | 0.9133 | 0.8616 | 13 |
+| N | 150 | 0.9267 | 0.8634 | 11 |
 
 ## Error analysis — `aslnet_relu_aug_seed42`
 

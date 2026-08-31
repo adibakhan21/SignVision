@@ -178,7 +178,11 @@ def block_errors(runs) -> str:
 
 
 def block_setup(runs) -> str:
-    r = next(iter(runs.values()))
+    # Pinned to the headline architecture. Every other row here is identical across
+    # arms; only the parameter count differs, so picking an arbitrary run would let a
+    # smaller ablation (e.g. aslnet_gap) misreport the project's model size.
+    r = next((v for v in runs.values() if v["config"]["train"]["model"] == "aslnet_original"),
+             next(iter(runs.values())))
     d, t = r["config"]["data"], r["config"]["train"]
     n_tr, n_va, n_te = (r["split_sizes"][k] for k in ("train", "val", "test"))
     return "\n".join([
@@ -192,7 +196,7 @@ def block_setup(runs) -> str:
         f"| Input | {d['image_size']}×{d['image_size']} RGB, scaled to [0,1] |",
         f"| Optimiser | {t['optimizer'].title()}, lr {t['lr']}, batch {t['batch_size']} |",
         f"| Model selection | best epoch by `{t['select_on']}` on the validation set |",
-        f"| Parameters | {r['params']['total']:,} |",
+        f"| Parameters | {r['params']['total']:,} (`{t['model']}`) |",
     ])
 
 
