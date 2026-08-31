@@ -15,7 +15,7 @@ from signvision.data import make_transforms, select_subset, stratified_split
 from signvision.error_analysis import class_error_table, confusion_pairs, error_concentration
 from signvision.evaluate import compute_metrics
 from signvision.interpretability import GradCAM, activation_maps
-from signvision.models import ASLNetOriginal, ASLNetReLU, build_model
+from signvision.models import ASLNetOriginal, ASLNetGAP, ASLNetReLU, build_model
 from signvision.robustness import default_suite
 from signvision.utils import set_seed
 
@@ -139,7 +139,7 @@ def test_no_horizontal_flip_by_default():
     assert AugConfig().horizontal_flip is False
 
 
-@pytest.mark.parametrize("name", ["aslnet_original", "aslnet_relu"])
+@pytest.mark.parametrize("name", ["aslnet_original", "aslnet_relu", "aslnet_gap"])
 def test_model_forward_shape_and_params(name):
     m = build_model(name, n_classes=29, image_size=100)
     out = m(torch.randn(2, 3, 100, 100))
@@ -157,6 +157,28 @@ def test_relu_variant_differs_only_in_activation():
     x = torch.randn(4, 3, 100, 100)
     assert torch.allclose(a.features(x), b.features(x))
     assert not torch.allclose(a(x), b(x))
+
+
+def test_gap_variant_shares_the_conv_stack_and_drops_the_flatten():
+    """GAP changes only how the spatial map reaches the classifier."""
+    set_seed(0)
+    a = ASLNetOriginal(29)
+    set_seed(0)
+    g = ASLNetGAP(29)
+    a.eval(), g.eval()
+    x = torch.randn(4, 3, 100, 100)
+    assert torch.allclose(a.features(x), g.features(x))     # identical conv stack
+    assert a.f1.in_features == 2700 and g.f1.in_features == 27
+    assert sum(p.numel() for p in g.parameters()) < sum(p.numel() for p in a.parameters()) / 20
+
+
+def test_global_average_pooling_discards_position():
+    """The mechanism claim: averaging over space is invariant to where a feature sits."""
+    fmap = torch.randn(2, 27, 10, 10)
+    pooled = fmap.mean(dim=(2, 3))
+    for shift in (1, 3, 5):
+        moved = torch.roll(fmap, shifts=(shift, shift), dims=(2, 3))
+        assert torch.allclose(pooled, moved.mean(dim=(2, 3)), atol=1e-6)
 
 
 def test_gradcam_shape_and_range():

@@ -76,12 +76,48 @@ class ASLNetReLU(ASLNetOriginal):
         return self.f2(x)
 
 
+
+class ASLNetGAP(ASLNetOriginal):
+    """``ASLNetOriginal`` with the flatten replaced by global average pooling.
+
+    Single-variable change: identical convolutional stack, identical head widths
+    (``270 -> n_classes``) and the same missing FC non-linearity. The only thing
+    that changes is *how the spatial map reaches the classifier*.
+
+    ``ASLNetOriginal`` flattens the 27x10x10 map into 2,700 position-addressed
+    inputs, so 96% of its parameters sit in ``f1`` and absolute position is
+    encoded in that weight matrix. That is the mechanism proposed in
+    ``results/*/robustness.json`` for why a 5% translation costs ~33 points while
+    a comparable photometric change costs ~1. Averaging each channel over space
+    discards position by construction, which turns that explanation into a
+    testable prediction: if the mechanism is right, this arm should lose far less
+    accuracy under translation and rotation than its flattened twin.
+
+    It also shrinks ``f1`` from 729,270 parameters to 7,560, so the arm doubles
+    as a capacity check: 35,723 total parameters against 757,433.
+    """
+
+    def __init__(self, n_classes: int, image_size: int = 100) -> None:
+        super().__init__(n_classes, image_size)
+        self.pooled_dim = self.c2.out_channels
+        self.f1 = nn.Linear(self.pooled_dim, 270)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.features(x)
+        x = self.p2(x)
+        x = x.mean(dim=(2, 3))  # global average pool: (B, C, H, W) -> (B, C)
+        x = self.drop(self.f1(x))
+        return self.f2(x)
+
+
 def build_model(name: str, n_classes: int, image_size: int = 100) -> nn.Module:
     name = name.lower()
     if name == "aslnet_original":
         return ASLNetOriginal(n_classes, image_size)
     if name == "aslnet_relu":
         return ASLNetReLU(n_classes, image_size)
+    if name == "aslnet_gap":
+        return ASLNetGAP(n_classes, image_size)
     if name == "resnet18_ft":
         return _resnet18_finetune(n_classes)
     raise ValueError(f"unknown model '{name}'")

@@ -54,6 +54,7 @@ LABEL = {
     "augmented_e30": "B30 · Baseline + augmentation, 30 epochs",
     "aslnet_relu_e30": "C30 · ASLNet-ReLU, 30 epochs",
     "aslnet_relu_aug_e30": "D30 · ASLNet-ReLU + augmentation, 30 epochs",
+    "aslnet_gap_e30": "F30 · ASLNet-GAP (flatten replaced by pooling), 30 epochs",
     "resnet18_ft": "E · ResNet-18 fine-tuned (ImageNet init)",
 }
 ORDER = list(LABEL)
